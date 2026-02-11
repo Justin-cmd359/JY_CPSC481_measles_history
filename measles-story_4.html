@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Measles Story: Horror to Triumph</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      font-family: 'Space Mono', monospace;
+      background: #000;
+      color: #fff;
+      overflow-x: hidden;
+      width: 100%;
+      height: 100%;
+    }
+
+    .scroll-indicator {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      animation: bounce 2s infinite;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(10px); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.05); }
+    }
+
+    .section {
+      width: 100%;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    .divider {
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // Complete CDC data
+    const measlesData = [
+      {year: 1919, cases: 179829}, {year: 1921, cases: 280930}, {year: 1924, cases: 511305},
+      {year: 1925, cases: 225027}, {year: 1938, cases: 822811}, {year: 1939, cases: 403317},
+      {year: 1940, cases: 291162}, {year: 1941, cases: 894134}, {year: 1942, cases: 547393},
+      {year: 1943, cases: 633627}, {year: 1944, cases: 630291}, {year: 1945, cases: 146013},
+      {year: 1946, cases: 649843}, {year: 1947, cases: 222375}, {year: 1948, cases: 615104},
+      {year: 1949, cases: 625281}, {year: 1950, cases: 319124}, {year: 1951, cases: 530118},
+      {year: 1952, cases: 683077}, {year: 1953, cases: 449146}, {year: 1954, cases: 682720},
+      {year: 1955, cases: 555156}, {year: 1956, cases: 611936}, {year: 1957, cases: 486799},
+      {year: 1958, cases: 763094}, {year: 1959, cases: 406162}, {year: 1960, cases: 441703},
+      {year: 1961, cases: 423919}, {year: 1962, cases: 481530}, {year: 1963, cases: 385156},
+      {year: 1964, cases: 458083}, {year: 1965, cases: 261904}, {year: 1966, cases: 204136},
+      {year: 1967, cases: 62705}, {year: 1968, cases: 22231}, {year: 1969, cases: 25826},
+      {year: 1970, cases: 47351}, {year: 1971, cases: 75290}, {year: 1972, cases: 32275},
+      {year: 1973, cases: 26690}, {year: 1974, cases: 22094}, {year: 1975, cases: 24374},
+      {year: 1976, cases: 41126}, {year: 1977, cases: 57345}, {year: 1978, cases: 26871},
+      {year: 1979, cases: 13597}, {year: 1980, cases: 13506}, {year: 1981, cases: 3124},
+      {year: 1982, cases: 1714}, {year: 1983, cases: 1497}, {year: 1984, cases: 2587},
+      {year: 1985, cases: 2822}, {year: 1986, cases: 6255}, {year: 1987, cases: 3652},
+      {year: 1988, cases: 3410}, {year: 1989, cases: 17914}, {year: 1990, cases: 27808},
+      {year: 1991, cases: 9643}, {year: 1992, cases: 2126}, {year: 1993, cases: 312},
+      {year: 1994, cases: 899}, {year: 1995, cases: 308}, {year: 1996, cases: 492},
+      {year: 1997, cases: 141}, {year: 1998, cases: 100}, {year: 1999, cases: 99},
+      {year: 2000, cases: 85}, {year: 2001, cases: 116}, {year: 2002, cases: 44},
+      {year: 2003, cases: 56}, {year: 2004, cases: 37}, {year: 2005, cases: 66},
+      {year: 2006, cases: 55}, {year: 2007, cases: 43}, {year: 2008, cases: 140},
+      {year: 2009, cases: 72}, {year: 2010, cases: 63}, {year: 2011, cases: 220},
+      {year: 2012, cases: 55}, {year: 2013, cases: 187}, {year: 2014, cases: 667},
+      {year: 2015, cases: 191}, {year: 2016, cases: 86}, {year: 2017, cases: 120},
+      {year: 2018, cases: 381}, {year: 2019, cases: 1274}, {year: 2020, cases: 13},
+      {year: 2021, cases: 49}, {year: 2022, cases: 121}, {year: 2023, cases: 59},
+      {year: 2024, cases: 285}, {year: 2025, cases: 2276}, {year: 2026, cases: 733}
+    ];
+
+    // THE VANISHING COMPONENT
+    const TheVanishing = () => {
+      const canvasRef = useRef(null);
+      const containerRef = useRef(null);
+      const [isPlaying, setIsPlaying] = useState(false);
+      const [currentYear, setCurrentYear] = useState(1919);
+      const [speed, setSpeed] = useState(1);
+      const particlesRef = useRef([]);
+      const animationFrameRef = useRef(null);
+
+      const getCurrentData = () => {
+        return measlesData.find(d => d.year === currentYear) || { year: currentYear, cases: 0 };
+      };
+
+      const currentData = getCurrentData();
+
+      class Particle {
+        constructor(x, y, isVaccineEra) {
+          this.x = x;
+          this.y = y;
+          this.baseX = x;
+          this.baseY = y;
+          this.size = Math.random() * 2 + 2;
+          this.speedX = (Math.random() - 0.5) * 0.3;
+          this.speedY = (Math.random() - 0.5) * 0.3;
+          this.life = 1.0;
+          this.fadeSpeed = isVaccineEra ? 0.02 : 0.001;
+          this.shake = Math.random() * Math.PI * 2;
+          this.shakeSpeed = 0.1 + Math.random() * 0.1;
+          this.isVaccineEra = isVaccineEra;
+          this.age = 0;
+        }
+
+        update() {
+          this.age++;
+          this.shake += this.shakeSpeed;
+          const shakeIntensity = this.isVaccineEra ? 1 : 3;
+          this.x = this.baseX + Math.sin(this.shake) * shakeIntensity;
+          this.y = this.baseY + Math.cos(this.shake * 1.3) * shakeIntensity;
+          this.baseX += this.speedX;
+          this.baseY += this.speedY;
+          if (this.isVaccineEra) {
+            this.life -= this.fadeSpeed;
+          }
+          return this.life > 0;
+        }
+
+        draw(ctx) {
+          ctx.save();
+          ctx.globalAlpha = this.life;
+          const hue = this.isVaccineEra ? 30 : 0;
+          const saturation = this.isVaccineEra ? 70 : 90;
+          const pulse = Math.sin(this.age * 0.1) * 0.3 + 0.7;
+          const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
+          gradient.addColorStop(0, `hsla(${hue}, ${saturation}%, 50%, ${0.6 * pulse})`);
+          gradient.addColorStop(1, `hsla(${hue}, ${saturation}%, 30%, 0)`);
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = `hsl(${hue}, ${saturation}%, 55%)`;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      const initializeParticles = (cases, isVaccineEra) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const width = canvas.width;
+        const height = canvas.height;
+        const scaleFactor = 200;
+        const particleCount = Math.min(Math.floor(cases / scaleFactor), 5000);
+        const newParticles = [];
+        for (let i = 0; i < particleCount; i++) {
+          const x = Math.random() * width;
+          const y = Math.random() * height;
+          newParticles.push(new Particle(x, y, isVaccineEra));
+        }
+        particlesRef.current = newParticles;
+      };
+
+      const animate = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        ctx.fillStyle = 'rgba(10, 5, 15, 0.15)';
+        ctx.fillRect(0, 0, width, height);
+        particlesRef.current = particlesRef.current.filter(particle => {
+          const alive = particle.update();
+          if (alive) {
+            particle.draw(ctx);
+          }
+          return alive;
+        });
+        animationFrameRef.current = requestAnimationFrame(animate);
+      };
+
+      useEffect(() => {
+        if (!isPlaying) return;
+        const interval = setInterval(() => {
+          setCurrentYear(prev => {
+            if (prev >= 2026) {
+              setIsPlaying(false);
+              return 2026;
+            }
+            const currentIndex = measlesData.findIndex(d => d.year === prev);
+            if (currentIndex < measlesData.length - 1) {
+              return measlesData[currentIndex + 1].year;
+            }
+            return prev;
+          });
+        }, 1000 / speed);
+        return () => clearInterval(interval);
+      }, [isPlaying, speed]);
+
+      useEffect(() => {
+        const isVaccineEra = currentYear >= 1963;
+        initializeParticles(currentData.cases, isVaccineEra);
+      }, [currentYear]);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        const container = containerRef.current;
+        if (!canvas || !container) return;
+        
+        const resizeCanvas = () => {
+          canvas.width = container.offsetWidth;
+          canvas.height = container.offsetHeight;
+        };
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        animate();
+        
+        return () => {
+          window.removeEventListener('resize', resizeCanvas);
+          if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+          }
+        };
+      }, []);
+
+      const handleReset = () => {
+        setIsPlaying(false);
+        setCurrentYear(1919);
+      };
+
+      const isVaccineYear = currentYear === 1963;
+      const isPostVaccine = currentYear > 1963;
+
+      return (
+        <div className="section" style={{
+          background: 'linear-gradient(135deg, #0a050f 0%, #1a0a1f 50%, #0f0520 100%)',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh'
+        }}>
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.03) 1px, transparent 0)',
+            backgroundSize: '40px 40px',
+            pointerEvents: 'none',
+            zIndex: 0
+          }} />
+
+          <div style={{
+            position: 'relative',
+            zIndex: 1,
+            padding: '30px 50px',
+            borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)',
+            flexShrink: 0
+          }}>
+            <h1 style={{
+              margin: 0,
+              fontSize: '42px',
+              fontWeight: 700,
+              background: 'linear-gradient(135deg, #ff6b6b 0%, #ffa07a 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '-1px'
+            }}>
+              THE VANISHING
+            </h1>
+            <p style={{
+              margin: '8px 0 0 0',
+              fontSize: '14px',
+              color: 'rgba(255, 255, 255, 0.6)',
+              letterSpacing: '2px',
+              fontWeight: 300
+            }}>
+              Each dot represents a person with measles • United States 1919-2026
+            </p>
+          </div>
+
+          <div ref={containerRef} style={{ 
+            flex: 1, 
+            position: 'relative',
+            overflow: 'hidden',
+            minHeight: 0
+          }}>
+            <canvas
+              ref={canvasRef}
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'block'
+              }}
+            />
+
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              textAlign: 'center',
+              pointerEvents: 'none'
+            }}>
+              <div style={{
+                fontSize: '140px',
+                fontWeight: 900,
+                color: isVaccineYear ? '#FFD700' : (isPostVaccine ? '#4ADE80' : '#ff6b6b'),
+                opacity: 0.12,
+                lineHeight: 1,
+                transition: 'color 0.5s ease'
+              }}>
+                {currentYear}
+              </div>
+              {isVaccineYear && (
+                <div style={{
+                  fontSize: '36px',
+                  fontWeight: 700,
+                  color: '#FFD700',
+                  marginTop: '15px',
+                  textShadow: '0 0 30px rgba(255, 215, 0, 0.8)',
+                  animation: 'pulse 2s infinite'
+                }}>
+                  ⚡ VACCINE INTRODUCED ⚡
+                </div>
+              )}
+            </div>
+
+            <div style={{
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              background: 'rgba(0, 0, 0, 0.7)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '12px',
+              padding: '18px 24px',
+              minWidth: '240px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+            }}>
+              <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px', letterSpacing: '1px' }}>
+                CURRENT YEAR
+              </div>
+              <div style={{
+                fontSize: '48px',
+                fontWeight: 900,
+                color: isPostVaccine ? '#4ADE80' : '#ff6b6b',
+                marginBottom: '12px',
+                lineHeight: 1
+              }}>
+                {currentYear}
+              </div>
+              <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.2)', margin: '12px 0' }} />
+              <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px', letterSpacing: '1px' }}>
+                REPORTED CASES
+              </div>
+              <div style={{
+                fontSize: '28px',
+                fontWeight: 700,
+                color: '#fff',
+                marginBottom: '6px'
+              }}>
+                {currentData.cases.toLocaleString()}
+              </div>
+              <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)' }}>
+                {currentYear < 1963 ? 'Pre-vaccine era' : currentYear === 1963 ? 'Vaccine year' : 'Post-vaccine era'}
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            position: 'relative',
+            zIndex: 1,
+            padding: '25px 50px',
+            background: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(20px)',
+            borderTop: '2px solid rgba(255, 255, 255, 0.1)',
+            flexShrink: 0
+          }}>
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  disabled={currentYear >= 2026}
+                  style={{
+                    padding: '14px 28px',
+                    fontSize: '15px',
+                    fontWeight: 700,
+                    fontFamily: "'Space Mono', monospace",
+                    background: isPlaying ? 'linear-gradient(135deg, #ff6b6b, #ff8787)' : 'linear-gradient(135deg, #4ADE80, #22c55e)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: currentYear >= 2026 ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+                    opacity: currentYear >= 2026 ? 0.5 : 1
+                  }}
+                >
+                  {isPlaying ? '⏸ PAUSE' : currentYear >= 2026 ? '✓ COMPLETE' : '▶ PLAY'}
+                </button>
+                
+                <button
+                  onClick={handleReset}
+                  style={{
+                    padding: '14px 28px',
+                    fontSize: '15px',
+                    fontWeight: 700,
+                    fontFamily: "'Space Mono', monospace",
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: '#fff',
+                    border: '2px solid rgba(255, 255, 255, 0.3)',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  ↺ RESET
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)', letterSpacing: '1px' }}>
+                  SPEED:
+                </span>
+                {[1, 2, 4].map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setSpeed(s)}
+                    style={{
+                      padding: '7px 16px',
+                      fontSize: '13px',
+                      fontWeight: speed === s ? 700 : 400,
+                      fontFamily: "'Space Mono', monospace",
+                      background: speed === s ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
+                      color: '#fff',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {s}x
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: '20px' }}>
+              <div style={{
+                height: '3px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '2px',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  height: '100%',
+                  width: `${((currentYear - 1919) / (2026 - 1919)) * 100}%`,
+                  background: 'linear-gradient(90deg, #ff6b6b, #4ADE80)',
+                  borderRadius: '2px',
+                  transition: 'width 0.5s ease'
+                }} />
+                
+                <div style={{
+                  position: 'absolute',
+                  left: `${((1963 - 1919) / (2026 - 1919)) * 100}%`,
+                  top: '-5px',
+                  width: '2px',
+                  height: '13px',
+                  background: '#FFD700',
+                  boxShadow: '0 0 10px rgba(255, 215, 0, 0.8)'
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: '-20px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    fontSize: '11px',
+                    color: '#FFD700',
+                    whiteSpace: 'nowrap',
+                    fontWeight: 700
+                  }}>
+                    1963
+                  </div>
+                </div>
+              </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: '6px',
+                fontSize: '11px',
+                color: 'rgba(255, 255, 255, 0.4)'
+              }}>
+                <span>1919</span>
+                <span>2026</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // THE HEARTBEAT COMPONENT (keeping existing implementation)
+    const TheHeartbeat = () => {
+      const [animationProgress, setAnimationProgress] = useState(0);
+      const [isPlaying, setIsPlaying] = useState(false);
+      const [viewMode, setViewMode] = useState('full');
+
+      const getViewData = () => {
+        if (viewMode === 'pre-vaccine') {
+          return measlesData.filter(d => d.year <= 1963);
+        } else if (viewMode === 'post-vaccine') {
+          return measlesData.filter(d => d.year >= 1963);
+        }
+        return measlesData;
+      };
+
+      const viewData = getViewData();
+      const maxCases = Math.max(...viewData.map(d => d.cases));
+      const minYear = Math.min(...viewData.map(d => d.year));
+      const maxYear = Math.max(...viewData.map(d => d.year));
+
+      useEffect(() => {
+        let interval;
+        if (isPlaying && animationProgress < 100) {
+          interval = setInterval(() => {
+            setAnimationProgress(prev => Math.min(prev + 0.5, 100));
+          }, 30);
+        } else if (animationProgress >= 100) {
+          setIsPlaying(false);
+        }
+        return () => clearInterval(interval);
+      }, [isPlaying, animationProgress]);
+
+      const getVisibleData = () => {
+        const cutoffIndex = Math.floor((animationProgress / 100) * viewData.length);
+        return viewData.slice(0, cutoffIndex);
+      };
+
+      const visibleData = isPlaying ? getVisibleData() : viewData;
+      const currentDataPoint = visibleData[visibleData.length - 1];
+
+      const createPath = (data) => {
+        if (data.length === 0) return '';
+        const width = 1000;
+        const height = 500;
+        const padding = 80;
+        const xScale = (year) => {
+          const range = maxYear - minYear;
+          return padding + ((year - minYear) / range) * (width - 2 * padding);
+        };
+        const yScale = (cases) => {
+          return height - padding - ((cases / maxCases) * (height - 2 * padding));
+        };
+        let path = `M ${xScale(data[0].year)} ${yScale(data[0].cases)}`;
+        for (let i = 1; i < data.length; i++) {
+          path += ` L ${xScale(data[i].year)} ${yScale(data[i].cases)}`;
+        }
+        return path;
+      };
+
+      const renderGridLines = () => {
+        const lines = [];
+        const width = 1000;
+        const height = 500;
+        const padding = 80;
+        for (let i = 0; i <= 8; i++) {
+          const y = padding + (i * (height - 2 * padding) / 8);
+          lines.push(
+            <line
+              key={`h-${i}`}
+              x1={padding}
+              y1={y}
+              x2={width - padding}
+              y2={y}
+              stroke="#0a3d2a"
+              strokeWidth="0.5"
+              opacity="0.3"
+            />
+          );
+        }
+        const yearRange = maxYear - minYear;
+        const step = yearRange > 80 ? 10 : yearRange > 40 ? 5 : 2;
+        for (let year = minYear; year <= maxYear; year += step) {
+          const x = padding + ((year - minYear) / yearRange) * (width - 2 * padding);
+          lines.push(
+            <line
+              key={`v-${year}`}
+              x1={x}
+              y1={padding}
+              x2={x}
+              y2={height - padding}
+              stroke="#0a3d2a"
+              strokeWidth="0.5"
+              opacity="0.3"
+            />
+          );
+        }
+        return lines;
+      };
+
+      const renderAxisLabels = () => {
+        const labels = [];
+        const width = 1000;
+        const height = 500;
+        const padding = 80;
+        for (let i = 0; i <= 8; i++) {
+          const cases = Math.round((maxCases / 8) * (8 - i));
+          const y = padding + (i * (height - 2 * padding) / 8);
+          labels.push(
+            <text
+              key={`y-${i}`}
+              x={padding - 15}
+              y={y + 5}
+              fill="#00ff00"
+              fontSize="13"
+              textAnchor="end"
+              fontFamily="monospace"
+            >
+              {cases.toLocaleString()}
+            </text>
+          );
+        }
+        const yearRange = maxYear - minYear;
+        const step = yearRange > 80 ? 10 : yearRange > 40 ? 5 : 2;
+        for (let year = minYear; year <= maxYear; year += step) {
+          const x = padding + ((year - minYear) / yearRange) * (width - 2 * padding);
+          labels.push(
+            <text
+              key={`x-${year}`}
+              x={x}
+              y={height - padding + 30}
+              fill="#00ff00"
+              fontSize="13"
+              textAnchor="middle"
+              fontFamily="monospace"
+            >
+              {year}
+            </text>
+          );
+        }
+        labels.push(
+          <text
+            key="y-title"
+            x={20}
+            y={height / 2}
+            fill="#00ff00"
+            fontSize="15"
+            textAnchor="middle"
+            fontFamily="monospace"
+            transform={`rotate(-90, 20, ${height / 2})`}
+            fontWeight="bold"
+          >
+            CASES PER YEAR
+          </text>
+        );
+        return labels;
+      };
+
+      const renderVaccineMarker = () => {
+        if (viewMode === 'post-vaccine') return null;
+        if (1963 < minYear || 1963 > maxYear) return null;
+        const width = 1000;
+        const height = 500;
+        const padding = 80;
+        const yearRange = maxYear - minYear;
+        const x = padding + ((1963 - minYear) / yearRange) * (width - 2 * padding);
+        return (
+          <>
+            <line
+              x1={x}
+              y1={padding}
+              x2={x}
+              y2={height - padding}
+              stroke="#ffff00"
+              strokeWidth="3"
+              strokeDasharray="8,4"
+              opacity="0.8"
+            />
+            <rect
+              x={x - 60}
+              y={padding - 5}
+              width={120}
+              height={60}
+              fill="#000"
+              stroke="#ffff00"
+              strokeWidth="2"
+              opacity="0.9"
+            />
+            <text
+              x={x}
+              y={padding + 15}
+              fill="#ffff00"
+              fontSize="14"
+              fontFamily="monospace"
+              fontWeight="bold"
+              textAnchor="middle"
+            >
+              ⚡ VACCINE
+            </text>
+            <text
+              x={x}
+              y={padding + 35}
+              fill="#ffff00"
+              fontSize="16"
+              fontFamily="monospace"
+              fontWeight="bold"
+              textAnchor="middle"
+            >
+              1963
+            </text>
+          </>
+        );
+      };
+
+      const peakYear = viewData.reduce((max, d) => d.cases > max.cases ? d : max, viewData[0]);
+
+      return (
+        <div className="section" style={{
+          backgroundColor: '#000',
+          padding: '40px',
+        }}>
+          <div style={{
+            backgroundColor: '#0a0a0a',
+            border: '3px solid #00ff00',
+            borderRadius: '10px',
+            padding: '25px',
+            marginBottom: '30px',
+            boxShadow: '0 0 30px rgba(0, 255, 0, 0.3)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <div>
+                <h1 style={{ margin: 0, fontSize: '32px', color: '#00ff00', textShadow: '0 0 10px #00ff00' }}>
+                  ⚡ THE HEARTBEAT
+                </h1>
+                <p style={{ margin: '8px 0 0 0', fontSize: '15px', color: '#00cc00' }}>
+                  Vital Signs Monitor • United States CDC Data 1919-2026
+                </p>
+              </div>
+              <div style={{ 
+                textAlign: 'right', 
+                backgroundColor: '#001a00', 
+                padding: '15px 25px', 
+                borderRadius: '8px',
+                border: '2px solid #00ff00'
+              }}>
+                <div style={{ fontSize: '14px', color: '#00cc00', marginBottom: '5px' }}>CURRENT READING</div>
+                <div style={{ 
+                  fontSize: '42px', 
+                  fontWeight: 'bold', 
+                  color: '#00ff00',
+                  textShadow: '0 0 15px #00ff00',
+                  fontFamily: 'monospace'
+                }}>
+                  {currentDataPoint ? currentDataPoint.cases.toLocaleString() : '---'}
+                </div>
+                <div style={{ fontSize: '16px', color: '#00cc00', marginTop: '5px' }}>
+                  {currentDataPoint ? `YEAR: ${currentDataPoint.year}` : 'YEAR: ---'}
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ 
+              display: 'flex', 
+              gap: '20px', 
+              marginTop: '20px',
+              padding: '15px',
+              backgroundColor: '#001a00',
+              borderRadius: '6px'
+            }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '12px', color: '#00cc00' }}>PEAK (PRE-VACCINE)</div>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff0000', textShadow: '0 0 8px #ff0000' }}>
+                  {peakYear && peakYear.year <= 1963 ? peakYear.cases.toLocaleString() : '---'}
+                </div>
+                <div style={{ fontSize: '11px', color: '#00cc00' }}>
+                  {peakYear && peakYear.year <= 1963 ? `Year: ${peakYear.year}` : ''}
+                </div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '12px', color: '#00cc00' }}>POST-VACCINE AVG</div>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#00ff00' }}>
+                  {Math.round(viewData.filter(d => d.year >= 1980).reduce((sum, d) => sum + d.cases, 0) / viewData.filter(d => d.year >= 1980).length).toLocaleString()}
+                </div>
+                <div style={{ fontSize: '11px', color: '#00cc00' }}>Since 1980</div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '12px', color: '#00cc00' }}>REDUCTION</div>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#00ff00' }}>
+                  99.9%
+                </div>
+                <div style={{ fontSize: '11px', color: '#00cc00' }}>Vaccine effectiveness</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            backgroundColor: '#0a0a0a',
+            border: '3px solid #00ff00',
+            borderRadius: '10px',
+            padding: '25px',
+            marginBottom: '30px'
+          }}>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '12px', fontSize: '15px', fontWeight: 'bold' }}>
+                📊 VIEW MODE:
+              </label>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                {[
+                  { mode: 'pre-vaccine', label: '🔴 THE HORROR (1919-1963)' },
+                  { mode: 'post-vaccine', label: '💚 THE TRIUMPH (1963-2026)' },
+                  { mode: 'full', label: '⚡ COMPLETE STORY (1919-2026)' }
+                ].map(({ mode, label }) => (
+                  <button
+                    key={mode}
+                    onClick={() => {
+                      setViewMode(mode);
+                      setAnimationProgress(0);
+                      setIsPlaying(false);
+                    }}
+                    style={{
+                      padding: '14px 24px',
+                      backgroundColor: viewMode === mode ? '#00ff00' : '#003300',
+                      color: viewMode === mode ? '#000' : '#00ff00',
+                      border: '2px solid #00ff00',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontFamily: "'Space Mono', monospace",
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <button
+                onClick={() => {
+                  setIsPlaying(!isPlaying);
+                  if (animationProgress >= 100) {
+                    setAnimationProgress(0);
+                  }
+                }}
+                style={{
+                  padding: '14px 35px',
+                  backgroundColor: '#00ff00',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 0 20px rgba(0, 255, 0, 0.5)'
+                }}
+              >
+                {isPlaying ? '⏸ PAUSE' : animationProgress >= 100 ? '↻ REPLAY' : '▶ PLAY'}
+              </button>
+              <button
+                onClick={() => {
+                  setAnimationProgress(0);
+                  setIsPlaying(false);
+                }}
+                style={{
+                  padding: '14px 35px',
+                  backgroundColor: '#003300',
+                  color: '#00ff00',
+                  border: '2px solid #00ff00',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: '18px',
+                  fontWeight: 'bold'
+                }}
+              >
+                ⏹ RESET
+              </button>
+              <div style={{ 
+                marginLeft: '25px', 
+                fontSize: '16px',
+                padding: '10px 20px',
+                backgroundColor: '#001a00',
+                borderRadius: '6px',
+                border: '1px solid #00ff00'
+              }}>
+                PROGRESS: <span style={{ fontWeight: 'bold', fontSize: '18px' }}>{Math.round(animationProgress)}%</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            backgroundColor: '#0a0a0a',
+            border: '3px solid #00ff00',
+            borderRadius: '10px',
+            padding: '40px',
+            position: 'relative',
+            boxShadow: '0 0 40px rgba(0, 255, 0, 0.4)'
+          }}>
+            <svg width="1000" height="500" style={{ display: 'block', margin: '0 auto' }}>
+              {renderGridLines()}
+              {renderAxisLabels()}
+              {renderVaccineMarker()}
+              <path
+                d={createPath(visibleData)}
+                stroke="#00ff00"
+                strokeWidth="3"
+                fill="none"
+                filter="url(#glow)"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <defs>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+            </svg>
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 0, 0.03) 2px, rgba(0, 255, 0, 0.03) 4px)',
+              pointerEvents: 'none',
+              borderRadius: '10px'
+            }} />
+          </div>
+
+          <div style={{
+            backgroundColor: '#0a0a0a',
+            border: '3px solid #00ff00',
+            borderRadius: '10px',
+            padding: '25px',
+            marginTop: '30px'
+          }}>
+            <h3 style={{ marginTop: 0, color: '#00ff00', fontSize: '22px' }}>💉 MEDICAL ANALYSIS</h3>
+            <div style={{ fontSize: '15px', lineHeight: '2', color: '#00cc00' }}>
+              {viewMode === 'full' && (
+                <>
+                  <p style={{ margin: '10px 0' }}>
+                    <strong style={{ color: '#00ff00' }}>THE COMPLETE STORY (1919-2026):</strong> This visualization shows over a century of measles data. 
+                    What you're witnessing is one of medicine's greatest triumphs.
+                  </p>
+                  <p style={{ margin: '10px 0' }}>
+                    <strong style={{ color: '#ff3333' }}>Before 1963:</strong> A violent, erratic "heartbeat" - peaks of 600,000-900,000 cases devastating communities year after year.
+                    <br />
+                    <strong style={{ color: '#ffff00' }}>The Vaccine (1963):</strong> A turning point in human health.
+                    <br />
+                    <strong style={{ color: '#00ff00' }}>After 1963:</strong> The heartbeat flatlines to near-silence. The disease, once ubiquitous, becomes rare.
+                  </p>
+                  <p style={{ margin: '10px 0', fontWeight: 'bold', color: '#00ff00', fontSize: '16px' }}>
+                    The flatline shows the vital signs of the disease itself - and they're nearly gone.
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // MAIN APP
+    const App = () => {
+      const [showScrollIndicator, setShowScrollIndicator] = useState(true);
+
+      useEffect(() => {
+        const handleScroll = () => {
+          const scrolledPastFirst = window.scrollY > 200;
+          const scrolledToBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100;
+          
+          if (scrolledPastFirst || scrolledToBottom) {
+            setShowScrollIndicator(false);
+          } else if (window.scrollY < 100) {
+            setShowScrollIndicator(true);
+          }
+        };
+        
+        // Run once on load
+        handleScroll();
+        
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+      }, []);
+
+      return (
+        <>
+          <TheVanishing />
+          <div className="divider" />
+          <TheHeartbeat />
+          
+          {showScrollIndicator && (
+            <div className="scroll-indicator">
+              <div style={{
+                fontSize: '14px',
+                color: 'rgba(255, 255, 255, 0.6)',
+                marginBottom: '8px',
+                textAlign: 'center',
+                letterSpacing: '1px'
+              }}>
+                SCROLL FOR MORE
+              </div>
+              <div style={{
+                fontSize: '24px',
+                textAlign: 'center'
+              }}>
+                ↓
+              </div>
+            </div>
+          )}
+        </>
+      );
+    };
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
